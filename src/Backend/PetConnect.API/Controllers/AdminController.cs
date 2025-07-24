@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PetConnect.BLL.Services.DTOs;
 using PetConnect.BLL.Services.Interfaces;
 
 namespace PetConnect.API.Controllers
@@ -13,41 +14,45 @@ namespace PetConnect.API.Controllers
         {
             adminService = _adminService;
         }
+
+
+
         [HttpGet]
         public IActionResult Index()
         {
             var dashboard = adminService.GetPendingDoctorsAndPets();
-            return Ok(dashboard);
+            return Ok(new GeneralResponse(200, dashboard));
         }
+
+
+
+
         [HttpPost("approve-doctor/{id}")]
         public IActionResult ApproveDoctor(string id)
         {
-            try
+            var result = adminService.ApproveDoctor(id);
+            if (result == null)
+                return BadRequest();
+            else 
             {
-                adminService.ApproveDoctor(id);
-                var dashboard = adminService.GetPendingDoctorsAndPets();
-                return Ok(dashboard);
+                return Ok(new GeneralResponse(200, result));
             }
-            catch (Exception ex)
-            {
-                return (StatusCode(500, new { message = "Error Approving Doctor", error = ex.Message }));
-            }
-            
         }
+
+
+
+
+
         [HttpPost("approve-pet/{id}")]
         public IActionResult ApprovePet(int id)
         {
-            try
+            var result = adminService.ApprovePet(id);
+            if (result == null)
+                return BadRequest();
+            else
             {
-                adminService.ApprovePet(id);
-                var dashboard = adminService.GetPendingDoctorsAndPets();
-                return Ok(dashboard);
+                return Ok(new GeneralResponse(200, result));
             }
-            catch (Exception ex)
-            {
-                return (StatusCode(500, new {message = "Error approving pet" , error = ex.Message }));
-            }
-            
         }
     }
 }

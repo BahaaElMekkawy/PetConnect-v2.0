@@ -21,37 +21,6 @@ namespace PetConnect.BLL.Services.Classes
             unitOfWork = _unitOfWork;
         }
 
-        //public IEnumerable<DoctorDetailsDTO> GetPendingDoctors() 
-        //{
-        //    return unitOfWork.DoctorRepository.GetAll()
-        //        .Select(d => new DoctorDetailsDTO
-        //        {
-        //            Id = d.Id,
-        //            FName = d.FName,
-        //            LName = d.LName,
-        //            ImgUrl = d.ImgUrl ?? "/assets/img/default-doctor.jpg",
-        //            PetSpecialty = d.PetSpecialty.ToString(),
-        //            Gender = d.Gender.ToString(),
-        //            PricePerHour = d.PricePerHour,
-        //            CertificateUrl = d.CertificateUrl,
-        //            Street = d.Address.Street,
-        //            City = d.Address.City,
-        //            IsApproved = d.IsApproved
-        //        }).Where(D => D.IsApproved == false);
-        //}
-
-        //public IEnumerable<AddedPetDto> GetPendingPets()
-        //{
-        //    return unitOfWork.PetRepository.GetAll()
-        //        .Select(d => new AddedPetDto
-        //        {
-        //            Name = d.Name,
-        //            Status=d.Status,
-        //            IsApproved =d.IsApproved,
-        //            Ownership=d.Ownership,
-        //            BreedId=d.BreedId
-        //        }).Where(P => P.IsApproved == false);
-        //}
         public AdminDashboardDTO GetPendingDoctorsAndPets()
         {
             var pendingDoctors = unitOfWork.DoctorRepository.GetAll()
@@ -80,7 +49,7 @@ namespace PetConnect.BLL.Services.Classes
                     Status = p.Status,
                     IsApproved = p.IsApproved,
                     Ownership = p.Ownership,
-                    ImgUrl = p.ImgUrl ?? "/assets/img/default-doctor.jpg",
+                    ImgUrl = "https://localhost:7102/assets/petimages/" + p.ImgUrl,
                     BreadName = p.Breed.Name,
                     CategoryName = p.Breed.Category.Name
                 }).ToList();
@@ -92,7 +61,7 @@ namespace PetConnect.BLL.Services.Classes
             };
         }
 
-        public void ApproveDoctor(string id) 
+        public DoctorDetailsDTO? ApproveDoctor(string id) 
         {
             Doctor? doctor =unitOfWork.DoctorRepository.GetByID(id);
             if (doctor is not null)
@@ -100,10 +69,24 @@ namespace PetConnect.BLL.Services.Classes
                 doctor.IsApproved = true;
                 unitOfWork.DoctorRepository.Update(doctor);
                 unitOfWork.SaveChanges();
+
+                DoctorDetailsDTO dto = new DoctorDetailsDTO()
+                {
+                    Id = doctor.Id,
+                    IsApproved = doctor.IsApproved,
+                    PetSpecialty = doctor.PetSpecialty.ToString(),
+                    FName = doctor.FName,
+                    LName = doctor.LName,
+                    City = doctor.Address.City,
+                    Street = doctor.Address.Street,
+                    PricePerHour = doctor.PricePerHour
+                };
+                return dto;
             }
+            return null;
         }
 
-        public void ApprovePet(int id)
+        public PetDetailsDto? ApprovePet(int id)
         {
             Pet? pet = unitOfWork.PetRepository.GetByID(id);
             if (pet is not null)
@@ -111,7 +94,17 @@ namespace PetConnect.BLL.Services.Classes
                 pet.IsApproved = true;
                 unitOfWork.PetRepository.Update(pet);
                 unitOfWork.SaveChanges();
+
+                PetDetailsDto dto = new PetDetailsDto()
+                {
+                    Name = pet.Name,
+                    Id =pet.Id,
+                    Status = pet.Status,
+                    IsApproved = pet.IsApproved
+                };
+                return dto; 
             }
+            return null;
         }
 
     }

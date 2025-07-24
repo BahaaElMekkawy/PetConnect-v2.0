@@ -13,8 +13,8 @@ namespace PetConnect.BLL.Services.Interfaces
     public interface IAdminService
     {
         public AdminDashboardDTO GetPendingDoctorsAndPets();
-        public void ApproveDoctor(string id);
-        public void ApprovePet(int id);
+        public DoctorDetailsDTO? ApproveDoctor(string id);
+        public PetDetailsDto? ApprovePet(int id);
 
 
 
