@@ -1,0 +1,171 @@
+<div class="min-vh-100 bg-light p-4">
+  <div class="container-fluid">
+    <!-- Dashboard Header -->
+    <div class="mb-4">
+      <h1 class="display-4 fw-bold text-dark mb-2">Admin Dashboard</h1>
+      <p class="text-muted">Manage pending doctor registrations and pet submissions</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <div class="card h-100 border-primary">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="card-subtitle mb-2 text-muted">Pending Doctors</h6>
+              <h2 class="card-title mb-0">{{ doctors.length }}</h2>
+            </div>
+            <i class="fas fa-user-md fa-2x text-primary"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card h-100 border-success">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="card-subtitle mb-2 text-muted">Pending Pets</h6>
+              <h2 class="card-title mb-0">{{ pets.length }}</h2>
+            </div>
+            <i class="fas fa-paw fa-2x text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="card shadow">
+      <div class="card-header bg-white">
+        <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="doctors-tab" data-bs-toggle="tab" 
+                    data-bs-target="#doctors" type="button" role="tab">
+              Doctors ({{ doctors.length }})
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pets-tab" data-bs-toggle="tab" 
+                    data-bs-target="#pets" type="button" role="tab">
+              Pets ({{ pets.length }})
+            </button>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="card-body">
+        <div class="tab-content" id="adminTabsContent">
+          <!-- Doctors Tab -->
+          <div class="tab-pane fade show active" id="doctors" role="tabpanel">
+            <div *ngIf="doctors.length > 0; else noDoctors" class="row g-4">
+              <div *ngFor="let doctor of doctors" class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                  <img [src]="doctor.imgUrl || 'assets/default-doctor.jpg'" 
+                       class="card-img-top doctor-image" 
+                       [alt]="getDoctorFullName(doctor)">
+                  
+                  <div class="card-body">
+                    <h5 class="card-title">{{ getDoctorFullName(doctor) }}</h5>
+                    <p class="card-text">
+                      <strong>Specialty:</strong> {{ doctor.petSpecialty }}<br>
+                      <strong>Price:</strong> ${{ doctor.pricePerHour }}/hour
+                    </p>
+                  </div>
+                  
+                  <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between gap-2">
+                      <button class="btn btn-success btn-sm" 
+                              (click)="approveDoctor(doctor.id)">
+                        Approve
+                      </button>
+                      <button class="btn btn-info btn-sm" 
+                              (click)="viewCertificate(certificateModal, doctor.id)">
+                        View Certificate
+                      </button>
+                      <button class="btn btn-danger btn-sm" 
+                              (click)="rejectDoctor(doctor.id)">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <ng-template #noDoctors>
+              <div class="alert alert-info">
+                No pending doctor applications found.
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Pets Tab -->
+          <div class="tab-pane fade" id="pets" role="tabpanel">
+            <div *ngIf="pets.length > 0; else noPets" class="row g-4">
+              <div *ngFor="let pet of pets" class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                  <img [src]="pet.imgUrl || 'assets/default-pet.jpg'" 
+                       class="card-img-top pet-image" 
+                       [alt]="pet.name">
+                  
+                  <div class="card-body">
+                    <h5 class="card-title">{{ pet.name }}</h5>
+                    <p class="card-text">
+                      <strong>Type:</strong> {{ pet.categoryName }}<br>
+                      <strong>Breed:</strong> {{ pet.breadName }}
+                    </p>
+                  </div>
+                  
+                  <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                      <button class="btn btn-success btn-sm" 
+                              (click)="approvePet(pet.id)">
+                        Approve
+                      </button>
+                      <button class="btn btn-danger btn-sm" 
+                              (click)="rejectPet(pet.id)">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <ng-template #noPets>
+              <div class="alert alert-info">
+                No pending pet applications found.
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate Modal -->
+<ng-template #certificateModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Doctor Certificate</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body text-center">
+    <div *ngIf="selectedCertificateUrl; else noCertificate">
+      <img [src]="selectedCertificateUrl" 
+           alt="Doctor Certificate" 
+           class="img-fluid certificate-image"
+           *ngIf="isImage(selectedCertificateUrl); else documentView">
+      <ng-template #documentView>
+        <iframe [src]="getSafeUrl(selectedCertificateUrl)" 
+                width="100%" 
+                height="500px"
+                class="certificate-document"></iframe>
+      </ng-template>
+    </div>
+    <ng-template #noCertificate>
+      <p class="text-muted">No certificate available</p>
+    </ng-template>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
+  </div>
+</ng-template>
