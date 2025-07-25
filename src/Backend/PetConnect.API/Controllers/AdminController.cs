@@ -1,7 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PetConnect.BLL.Services.DTO.Doctor;
+using PetConnect.BLL.Services.DTO.PetDto;
 using PetConnect.BLL.Services.DTOs;
+using PetConnect.BLL.Services.DTOs.Admin;
+using PetConnect.BLL.Services.DTOs.Customer;
 using PetConnect.BLL.Services.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace PetConnect.API.Controllers
 {
@@ -18,6 +23,9 @@ namespace PetConnect.API.Controllers
 
 
         [HttpGet]
+        [EndpointSummary("Get All Pending Doctors And Pets")]
+        [ProducesResponseType(typeof(List<AdminDashboardDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Index()
         {
             var dashboard = adminService.GetPendingDoctorsAndPets();
@@ -25,14 +33,15 @@ namespace PetConnect.API.Controllers
         }
 
 
-
-
-        [HttpPost("approve-doctor/{id}")]
+        [HttpPut(template: "doctors/{id}/approve")]
+        [EndpointSummary("Approve Doctor By Id")]
+        [ProducesResponseType(typeof(DoctorDetailsDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult ApproveDoctor(string id)
         {
             var result = adminService.ApproveDoctor(id);
             if (result == null)
-                return BadRequest();
+                return NotFound();
             else 
             {
                 return Ok(new GeneralResponse(200, result));
@@ -40,19 +49,55 @@ namespace PetConnect.API.Controllers
         }
 
 
-
-
-
-        [HttpPost("approve-pet/{id}")]
-        public IActionResult ApprovePet(int id)
+        [HttpPut("doctors/{id}/reject")]
+        [EndpointSummary("Reject Doctor By Id")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(DoctorDetailsDTO), StatusCodes.Status200OK)]
+        public IActionResult RejectDoctor(string id, [FromBody]string message)
         {
-            var result = adminService.ApprovePet(id);
+            var result = adminService.RejectDoctor(id,message);
             if (result == null)
-                return BadRequest();
+                return NotFound();
             else
             {
                 return Ok(new GeneralResponse(200, result));
             }
         }
+
+
+
+        [HttpPut("pets/{id}/approve")]
+        [EndpointSummary("Approve Pet By Id")]
+        [ProducesResponseType(typeof(PetDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult ApprovePet(int id)
+        {
+            var result = adminService.ApprovePet(id);
+            if (result == null)
+                return NotFound();
+            else
+            {
+                return Ok(new GeneralResponse(200, result));
+            }
+        }
+
+
+
+        [HttpPut("pets/{id}/reject")]
+        [EndpointSummary("Reject Pet By Id")]
+        [ProducesResponseType(typeof(PetDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult RejectPet(int id ,[FromBody] string message)
+        {
+            var result = adminService.RejectPet(id,message);
+            if (result == null)
+                return NotFound();
+            else
+            {
+                return Ok(new GeneralResponse(200, result));
+            }
+        }
+
+
     }
 }

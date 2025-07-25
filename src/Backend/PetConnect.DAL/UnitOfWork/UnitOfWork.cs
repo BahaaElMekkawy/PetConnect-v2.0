@@ -53,6 +53,9 @@ namespace PetConnect.DAL.UnitofWork
 
         public ITimeSlotsRepository TimeSlotsRepository =>  new TimeSlotsRepository(context);
 
+        public IAdminDoctorMessageRepository AdminDoctorMessageRepository => new AdminDoctorMessageRepository(context);
+        public IAdminPetMessageRepository AdminPetMessageRepository => new AdminPetMessageRepository(context);
+
         public void Dispose()
         {
             context.Dispose();

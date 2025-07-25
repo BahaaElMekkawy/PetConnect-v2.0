@@ -15,6 +15,8 @@ namespace PetConnect.BLL.Services.Interfaces
         public AdminDashboardDTO GetPendingDoctorsAndPets();
         public DoctorDetailsDTO? ApproveDoctor(string id);
         public PetDetailsDto? ApprovePet(int id);
+        public DoctorDetailsDTO? RejectDoctor(string id, string message);
+        public PetDetailsDto? RejectPet(int id, string message);
 
 
 
