@@ -1,20 +1,28 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, TemplateRef } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { AdminService } from './admin-service';
+import { Doctor } from './models/doctor';
+import { Pet } from './models/pet';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AdminService } from './admin-service';
 
 @Component({
   selector: 'app-admin-dashboard',
   templateUrl: './admin-dashboard.html',
-  styleUrls: ['./admin-dashboard.scss'],
-  imports : [CommonModule]
+  styleUrls: ['./admin-dashboard.css'],
+  standalone: true,
+  imports: [CommonModule, FormsModule]
 })
 export class AdminDashboardComponent implements OnInit {
-  doctors: any[] = [];
-  pets: any[] = [];
+  doctors: Doctor[] = [];
+  pets: Pet[] = [];
   loading = true;
-  selectedCertificateUrl: string = '';
+  currentImageUrl: string = '';
+  
+  selectedRejectionId: string | number | null = null;
+  rejectionTarget: 'doctor' | 'pet' | null = null;
+  rejectionMessage: string = '';
 
   constructor(
     private adminService: AdminService,
@@ -36,50 +44,78 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load data:', err);
+        alert('Failed to load data.');
         this.loading = false;
       }
     });
   }
 
-  // Doctor actions
   approveDoctor(id: string): void {
     this.adminService.approveDoctor(id).subscribe({
       next: () => this.doctors = this.doctors.filter(d => d.id !== id),
-      error: (err) => console.error('Failed to approve doctor:', err)
+      error: (err) => {
+        console.error('Failed to approve doctor:', err);
+        alert('Failed to approve doctor.');
+      }
     });
   }
 
-  rejectDoctor(id: string): void {
-    this.adminService.rejectDoctor(id).subscribe({
-      next: () => this.doctors = this.doctors.filter(d => d.id !== id),
-      error: (err) => console.error('Failed to reject doctor:', err)
-    });
-  }
-
-  // Pet actions
   approvePet(id: number): void {
     this.adminService.approvePet(id).subscribe({
       next: () => this.pets = this.pets.filter(p => p.id !== id),
-      error: (err) => console.error('Failed to approve pet:', err)
+      error: (err) => {
+        console.error('Failed to approve pet:', err);
+        alert('Failed to approve pet.');
+      }
     });
   }
 
-  rejectPet(id: number): void {
-    this.adminService.rejectPet(id).subscribe({
-      next: () => this.pets = this.pets.filter(p => p.id !== id),
-      error: (err) => console.error('Failed to reject pet:', err)
-    });
+  openRejectionModal(content: TemplateRef<any>, id: string | number, type: 'doctor' | 'pet') {
+    this.selectedRejectionId = id;
+    this.rejectionTarget = type;
+    this.rejectionMessage = '';
+    this.modalService.open(content, { size: 'md' });
   }
 
-  // Certificate handling
-  viewCertificate(content: any, doctorId: string): void {
-    const doctor = this.doctors.find(d => d.id === doctorId);
-    this.selectedCertificateUrl = 'https://localhost:7102' +doctor?.certificateUrl || '';
-    this.modalService.open(content, { size: 'lg' });
+  openImageModal(content: TemplateRef<any>, imageUrl: string) {
+    this.currentImageUrl = imageUrl;
+    this.modalService.open(content, { size: 'xl', centered: true });
   }
 
-  // Helpers
-  getDoctorFullName(doctor: any): string {
+  confirmRejection(modalRef: any): void {
+    if (!this.rejectionMessage.trim()) {
+      alert('Please enter a rejection message.');
+      return;
+    }
+
+    if (this.rejectionTarget === 'doctor' && typeof this.selectedRejectionId === 'string') {
+      this.adminService.rejectDoctor(this.selectedRejectionId, this.rejectionMessage).subscribe({
+        next: () => {
+          this.doctors = this.doctors.filter(d => d.id !== this.selectedRejectionId);
+          modalRef.close();
+        },
+        error: (err) => {
+          console.error('Failed to reject doctor:', err);
+          alert('Failed to reject doctor.');
+        }
+      });
+    }
+
+    if (this.rejectionTarget === 'pet' && typeof this.selectedRejectionId === 'number') {
+      this.adminService.rejectPet(this.selectedRejectionId, this.rejectionMessage).subscribe({
+        next: () => {
+          this.pets = this.pets.filter(p => p.id !== this.selectedRejectionId);
+          modalRef.close();
+        },
+        error: (err) => {
+          console.error('Failed to reject pet:', err);
+          alert('Failed to reject pet.');
+        }
+      });
+    }
+  }
+
+  getDoctorFullName(doctor: Doctor): string {
     return `${doctor.fName} ${doctor.lName}`;
   }
 

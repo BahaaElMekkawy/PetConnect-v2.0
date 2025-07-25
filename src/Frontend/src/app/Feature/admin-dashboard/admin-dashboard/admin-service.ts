@@ -1,29 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-
-interface Doctor {
-  id: string;
-  fName: string;
-  lName: string;
-  imgUrl: string;
-  petSpecialty: string;
-  gender: string;
-  pricePerHour: number;
-  certificateUrl: string;
-  isApproved: boolean;
-}
-
-interface Pet {
-  id: number;
-  name: string;
-  imgUrl: string;
-  breadName: string;
-  categoryName: string;
-  isApproved: boolean;
-}
+import { Doctor } from './models/doctor';
+import { Pet } from './models/pet';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 interface AdminData {
   pendingDoctors: Doctor[];
@@ -34,27 +16,49 @@ interface AdminData {
   providedIn: 'root'
 })
 export class AdminService {
+  private headers = new HttpHeaders({
+    'Content-Type': 'application/json'
+  });
+
   constructor(private http: HttpClient) {}
 
   getPendingData(): Observable<AdminData> {
-    return this.http.get<{ data: AdminData }>(`${environment.apiBaseUrl}/Admin`).pipe(
+    return this.http.get<{ data: AdminData }>(
+      `${environment.apiBaseUrl}/Admin`
+    ).pipe(
       map(response => response.data)
     );
   }
 
   approveDoctor(id: string): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/Admin/approve-doctor/${id}`, {});
+    return this.http.put(
+      `${environment.apiBaseUrl}/Admin/doctors/${id}/approve`,
+      {},
+      { headers: this.headers }
+    );
   }
 
-  rejectDoctor(id: string): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/Admin/reject-doctor/${id}`, {});
+  rejectDoctor(id: string, message: string): Observable<any> {
+    return this.http.put(
+      `${environment.apiBaseUrl}/Admin/doctors/${id}/reject`,
+      JSON.stringify(message), // Send as raw JSON string
+      { headers: this.headers }
+    );
   }
 
   approvePet(id: number): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/Admin/approve-pet/${id}`, {});
+    return this.http.put(
+      `${environment.apiBaseUrl}/Admin/pets/${id}/approve`,
+      {},
+      { headers: this.headers }
+    );
   }
 
-  rejectPet(id: number): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/Admin/reject-pet/${id}`, {});
+  rejectPet(id: number, message: string): Observable<any> {
+    return this.http.put(
+      `${environment.apiBaseUrl}/Admin/pets/${id}/reject`,
+      JSON.stringify(message), // Send as raw JSON string
+      { headers: this.headers }
+    );
   }
 }

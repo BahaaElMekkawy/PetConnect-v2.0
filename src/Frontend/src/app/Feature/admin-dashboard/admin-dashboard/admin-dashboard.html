@@ -1,171 +1,180 @@
-<div class="min-vh-100 bg-light p-4">
-  <div class="container-fluid">
-    <!-- Dashboard Header -->
-    <div class="mb-4">
-      <h1 class="display-4 fw-bold text-dark mb-2">Admin Dashboard</h1>
-      <p class="text-muted">Manage pending doctor registrations and pet submissions</p>
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-primary">
+      <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+    </h2>
+    <div class="badge bg-info text-dark fs-6 p-2">
+      Pending Approvals: {{doctors.length + pets.length}}
     </div>
+  </div>
 
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-      <div class="col-md-6 mb-3">
-        <div class="card h-100 border-primary">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-subtitle mb-2 text-muted">Pending Doctors</h6>
-              <h2 class="card-title mb-0">{{ doctors.length }}</h2>
+  <!-- Doctor Approvals Section -->
+  <div class="card mb-5 border-0 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">
+        <i class="fas fa-user-md me-2"></i>Pending Doctor Approvals
+        <span class="badge bg-white text-primary ms-2">{{doctors.length}}</span>
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" *ngFor="let doctor of doctors">
+          <div class="card h-100 border-start border-4 border-primary">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0">
+                  <div class="avatar avatar-lg bg-light-primary text-primary rounded-circle">
+                    <i class="fas fa-user-md fs-4"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h5 class="card-title mb-1">{{ getDoctorFullName(doctor) }}</h5>
+                  <p class="text-muted small mb-0">New Registration</p>
+                </div>
+              </div>
+
+              <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span><i class="fas fa-envelope me-2 text-muted"></i>Email</span>
+                  <span class="text-dark">{{ doctor.email }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span><i class="fas fa-phone me-2 text-muted"></i>Phone</span>
+                  <span class="text-dark">{{ doctor.phoneNumber }}</span>
+                </li>
+              </ul>
+
+              <div class="mb-3" *ngIf="isImage(doctor.certificateUrl)">
+                <div class="certificate-preview border rounded p-2 bg-light">
+                  <img [src]="getSafeUrl('https://localhost:7102' + doctor.certificateUrl)" 
+                       alt="Certificate" 
+                       class="img-fluid rounded cursor-pointer"
+                       (click)="openImageModal(imageModal, 'https://localhost:7102' + doctor.certificateUrl)">
+                  <small class="text-muted d-block mt-1">Click to enlarge</small>
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button class="btn btn-success me-md-2" (click)="approveDoctor(doctor.id)">
+                  <i class="fas fa-check me-1"></i> Approve
+                </button>
+                <button class="btn btn-outline-danger" 
+                        (click)="openRejectionModal(rejectionModal, doctor.id, 'doctor')">
+                  <i class="fas fa-times me-1"></i> Reject
+                </button>
+              </div>
             </div>
-            <i class="fas fa-user-md fa-2x text-primary"></i>
           </div>
         </div>
       </div>
-      <div class="col-md-6 mb-3">
-        <div class="card h-100 border-success">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-subtitle mb-2 text-muted">Pending Pets</h6>
-              <h2 class="card-title mb-0">{{ pets.length }}</h2>
-            </div>
-            <i class="fas fa-paw fa-2x text-success"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="card shadow">
-      <div class="card-header bg-white">
-        <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="doctors-tab" data-bs-toggle="tab" 
-                    data-bs-target="#doctors" type="button" role="tab">
-              Doctors ({{ doctors.length }})
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="pets-tab" data-bs-toggle="tab" 
-                    data-bs-target="#pets" type="button" role="tab">
-              Pets ({{ pets.length }})
-            </button>
-          </li>
-        </ul>
-      </div>
-      
-      <div class="card-body">
-        <div class="tab-content" id="adminTabsContent">
-          <!-- Doctors Tab -->
-          <div class="tab-pane fade show active" id="doctors" role="tabpanel">
-            <div *ngIf="doctors.length > 0; else noDoctors" class="row g-4">
-              <div *ngFor="let doctor of doctors" class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                  <img [src]="doctor.imgUrl || 'assets/default-doctor.jpg'" 
-                       class="card-img-top doctor-image" 
-                       [alt]="getDoctorFullName(doctor)">
-                  
-                  <div class="card-body">
-                    <h5 class="card-title">{{ getDoctorFullName(doctor) }}</h5>
-                    <p class="card-text">
-                      <strong>Specialty:</strong> {{ doctor.petSpecialty }}<br>
-                      <strong>Price:</strong> ${{ doctor.pricePerHour }}/hour
-                    </p>
-                  </div>
-                  
-                  <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between gap-2">
-                      <button class="btn btn-success btn-sm" 
-                              (click)="approveDoctor(doctor.id)">
-                        Approve
-                      </button>
-                      <button class="btn btn-info btn-sm" 
-                              (click)="viewCertificate(certificateModal, doctor.id)">
-                        View Certificate
-                      </button>
-                      <button class="btn btn-danger btn-sm" 
-                              (click)="rejectDoctor(doctor.id)">
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <ng-template #noDoctors>
-              <div class="alert alert-info">
-                No pending doctor applications found.
-              </div>
-            </ng-template>
-          </div>
-
-          <!-- Pets Tab -->
-          <div class="tab-pane fade" id="pets" role="tabpanel">
-            <div *ngIf="pets.length > 0; else noPets" class="row g-4">
-              <div *ngFor="let pet of pets" class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                  <img [src]="pet.imgUrl || 'assets/default-pet.jpg'" 
-                       class="card-img-top pet-image" 
-                       [alt]="pet.name">
-                  
-                  <div class="card-body">
-                    <h5 class="card-title">{{ pet.name }}</h5>
-                    <p class="card-text">
-                      <strong>Type:</strong> {{ pet.categoryName }}<br>
-                      <strong>Breed:</strong> {{ pet.breadName }}
-                    </p>
-                  </div>
-                  
-                  <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                      <button class="btn btn-success btn-sm" 
-                              (click)="approvePet(pet.id)">
-                        Approve
-                      </button>
-                      <button class="btn btn-danger btn-sm" 
-                              (click)="rejectPet(pet.id)">
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <ng-template #noPets>
-              <div class="alert alert-info">
-                No pending pet applications found.
-              </div>
-            </ng-template>
-          </div>
+      <div class="text-center mt-3" *ngIf="doctors.length === 0">
+        <div class="alert alert-info mb-0">
+          <i class="fas fa-info-circle me-2"></i> No pending doctor approvals
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Pet Approvals Section -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h3 class="mb-0">
+        <i class="fas fa-paw me-2"></i>Pending Pet Approvals
+        <span class="badge bg-white text-success ms-2">{{pets.length}}</span>
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4 col-xl-3" *ngFor="let pet of pets">
+          <div class="card h-100 border-start border-4 border-success">
+            <div class="card-body">
+              <div class="text-center mb-3">
+                <div class="avatar avatar-xl bg-light-success text-success rounded-circle mb-2">
+                  <i class="fas fa-paw fs-4"></i>
+                </div>
+                <h5 class="card-title mb-1">{{ pet.name }}</h5>
+                <p class="text-muted small">{{ pet.categoryName }}</p>
+              </div>
+
+              <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span><i class="fas fa-dna me-2 text-muted"></i>Breed</span>
+                  <span class="text-dark">{{ pet.breadName }}</span>
+                </li>
+                <!-- <li class="list-group-item d-flex justify-content-between" *ngIf="pet.registrationDate">
+                  <span><i class="fas fa-calendar me-2 text-muted"></i>Registered</span>
+                  <span class="text-dark">
+                    {{ pet.registrationDate | date:'mediumDate' }}
+                    <small class="text-muted d-block">{{ pet.registrationDate | date:'shortTime' }}</small>
+                  </span>
+                </li> -->
+              </ul>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button class="btn btn-success me-md-2" (click)="approvePet(pet.id)">
+                  <i class="fas fa-check me-1"></i> Approve
+                </button>
+                <button class="btn btn-outline-danger" 
+                        (click)="openRejectionModal(rejectionModal, pet.id, 'pet')">
+                  <i class="fas fa-times me-1"></i> Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-3" *ngIf="pets.length === 0">
+        <div class="alert alert-info mb-0">
+          <i class="fas fa-info-circle me-2"></i> No pending pet approvals
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejection Modal -->
+  <ng-template #rejectionModal let-modal>
+    <div class="modal-header bg-light">
+      <h5 class="modal-title text-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>Rejection Reason
+      </h5>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="mb-3">
+          <label for="rejectionMessage" class="form-label">Please provide a reason for rejection:</label>
+          <textarea id="rejectionMessage" 
+                    class="form-control" 
+                    [(ngModel)]="rejectionMessage"
+                    name="rejectionMessage"
+                    rows="4"
+                    placeholder="Enter your rejection message here..."
+                    required></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer bg-light">
+      <button class="btn btn-secondary" (click)="modal.dismiss()">
+        <i class="fas fa-times me-1"></i> Cancel
+      </button>
+      <button class="btn btn-danger" (click)="confirmRejection(modal)">
+        <i class="fas fa-ban me-1"></i> Confirm Rejection
+      </button>
+    </div>
+  </ng-template>
+
+  <!-- Image Modal -->
+  <ng-template #imageModal let-modal>
+    <div class="modal-header">
+      <h5 class="modal-title">Certificate Preview</h5>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body text-center">
+      <img [src]="currentImageUrl" alt="Enlarged View" class="img-fluid" style="max-height: 70vh;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="modal.close()">Close</button>
+    </div>
+  </ng-template>
 </div>
-
-<!-- Certificate Modal -->
-<ng-template #certificateModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Doctor Certificate</h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body text-center">
-    <div *ngIf="selectedCertificateUrl; else noCertificate">
-      <img [src]="selectedCertificateUrl" 
-           alt="Doctor Certificate" 
-           class="img-fluid certificate-image"
-           *ngIf="isImage(selectedCertificateUrl); else documentView">
-      <ng-template #documentView>
-        <iframe [src]="getSafeUrl(selectedCertificateUrl)" 
-                width="100%" 
-                height="500px"
-                class="certificate-document"></iframe>
-      </ng-template>
-    </div>
-    <ng-template #noCertificate>
-      <p class="text-muted">No certificate available</p>
-    </ng-template>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
-  </div>
-</ng-template>
