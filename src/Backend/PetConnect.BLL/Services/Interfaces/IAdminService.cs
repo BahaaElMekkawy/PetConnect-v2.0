@@ -17,6 +17,8 @@ namespace PetConnect.BLL.Services.Interfaces
         public PetDetailsDto? ApprovePet(int id);
         public DoctorDetailsDTO? RejectDoctor(string id, string message);
         public PetDetailsDto? RejectPet(int id, string message);
+        public  Task<AdminStatisticsDTO> GetAdminStatistics();
+
 
 
 

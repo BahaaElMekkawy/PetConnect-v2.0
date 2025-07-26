@@ -22,6 +22,7 @@ export class AdminDashboardComponent implements OnInit {
   
   selectedRejectionId: string | number | null = null;
   rejectionTarget: 'doctor' | 'pet' | null = null;
+  statistics: any;
   rejectionMessage: string = '';
 
   constructor(
@@ -32,6 +33,7 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    this.loadStatistics();
   }
 
   loadData(): void {
@@ -46,6 +48,17 @@ export class AdminDashboardComponent implements OnInit {
         console.error('Failed to load data:', err);
         alert('Failed to load data.');
         this.loading = false;
+      }
+    });
+  }
+
+    loadStatistics(): void {
+    this.adminService.getStatistics().subscribe({
+      next: (stats) => {
+        this.statistics = stats;
+      },
+      error: (err) => {
+        console.error('Failed to load statistics:', err);
       }
     });
   }

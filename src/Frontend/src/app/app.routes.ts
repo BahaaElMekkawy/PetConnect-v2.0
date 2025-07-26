@@ -22,8 +22,11 @@ import { NotFoundDoctor } from './Feature/not-found-doctor/not-found-doctor';
 import { AdminDashboardComponent } from './Feature/admin-dashboard/admin-dashboard/admin-dashboard';
 import { authGuard } from './core/guards/auth-guard';
 import { CustomerProfile } from './Feature/customer-profile/customer-profile';
+import { AdminGuard } from './core/guards/admin-guard';
+import { UnauthComponent } from './Feature/unauthorized/unauth-component/unauth-component';
 export const routes: Routes = [
   { path: '', component: Home },
+  { path: 'home', component: Home },
   { path: 'doctors', component: Doctors },
   { path: 'doctors/:id', component: DoctorProfile },
   {
@@ -54,14 +57,17 @@ export const routes: Routes = [
   { path: 'register', component: Register, children: [] },
   { path: 'register/doctor', component: DoctorRegisterForm },
   { path: 'register/customer', component: CustomerRegisterForm },
-  { path: 'register', component: Register ,children: []},
-  {path:"register/doctor", component:DoctorRegisterForm},
-  {path:"register/customer", component:CustomerRegisterForm},
-  {path:"notfound/doctor",component:NotFoundDoctor},
-  {path:"admin",component:AdminDashboardComponent},
-
+  { path: 'register', component: Register, children: [] },
+  { path: 'register/doctor', component: DoctorRegisterForm },
+  { path: 'register/customer', component: CustomerRegisterForm },
+  { path: 'notfound/doctor', component: NotFoundDoctor },
+  {
+    path: 'admin',
+    component: AdminDashboardComponent,
+    canActivate: [authGuard, AdminGuard],
+  },
+  { path: 'unauthorized', component: UnauthComponent },
   { path: 'register', component: Register, children: [] },
 
   { path: 'notfound/doctor', component: NotFoundDoctor },
- 
 ];

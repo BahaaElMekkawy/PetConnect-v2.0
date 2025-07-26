@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using PetConnect.BLL.Services.DTO.Doctor;
 using PetConnect.BLL.Services.DTO.PetDto;
 using PetConnect.BLL.Services.DTOs.Admin;
@@ -25,7 +26,7 @@ namespace PetConnect.BLL.Services.Classes
         public AdminDashboardDTO GetPendingDoctorsAndPets()
         {
             var pendingDoctors = unitOfWork.DoctorRepository.GetAll()
-                .Where(d => !d.IsApproved)
+                .Where(d => !d.IsApproved && !d.IsDeleted )
                 .Select(d => new DoctorDetailsDTO
                 {
                     Id = d.Id,
@@ -41,11 +42,11 @@ namespace PetConnect.BLL.Services.Classes
                     PhoneNumber = d.PhoneNumber,
                     IsApproved = d.IsApproved,
                     IsDeleted = d.IsDeleted
-                    
+
                 }).ToList();
 
             var pendingPets = unitOfWork.PetRepository.GetPendingPetsWithBreedAndCategory()
-                .Where(p => !p.IsApproved)
+                .Where(p => !p.IsApproved && !p.IsDeleted)
                 .Select(p => new PetDetailsDto
                 {
                     Id = p.Id,
@@ -124,10 +125,12 @@ namespace PetConnect.BLL.Services.Classes
                 doctor.IsApproved = false;
                 unitOfWork.DoctorRepository.Update(doctor);
                 //add the message to the database
-                AdminDoctorMessage adminDoctorMessage = new AdminDoctorMessage();
-                adminDoctorMessage.MessageType = AdminMessageType.Rejection;
-                adminDoctorMessage.Message = message;
-                adminDoctorMessage.DoctorId = id;
+                AdminDoctorMessage adminDoctorMessage = new AdminDoctorMessage()
+                {
+                    MessageType = AdminMessageType.Rejection,
+                    Message = message,
+                    DoctorId = id
+                };
                 unitOfWork.AdminDoctorMessageRepository.Add(adminDoctorMessage);
                 unitOfWork.SaveChanges();
                 //return the details to show in the API result 
@@ -152,17 +155,19 @@ namespace PetConnect.BLL.Services.Classes
         public PetDetailsDto? RejectPet(int id, string message)
         {
             var pet = unitOfWork.PetRepository.GetByID(id);
-            if (pet is not null) 
+            if (pet is not null)
             {
                 //udate pet
                 pet.IsDeleted = true;
                 pet.IsApproved = false;
                 unitOfWork.PetRepository.Update(pet);
                 //add the message to database
-                AdminPetMessage adminPetMessage = new AdminPetMessage();
-                adminPetMessage.MessageType = AdminMessageType.Rejection;
-                adminPetMessage.PetId = id;
-                adminPetMessage.Message = message;
+                AdminPetMessage adminPetMessage = new AdminPetMessage() 
+                { 
+                    MessageType = AdminMessageType.Rejection,
+                    PetId = id,
+                    Message = message
+                };
                 unitOfWork.AdminPetMessageRepository.Add(adminPetMessage);
                 unitOfWork.SaveChanges();
                 //return the details to show in the API result 
@@ -178,6 +183,29 @@ namespace PetConnect.BLL.Services.Classes
 
             }
             return null;
+        }
+
+        public async Task<AdminStatisticsDTO> GetAdminStatistics()
+        {
+            //Pet Stats 
+            var totalPets = await unitOfWork.PetRepository.GetAllQueryable().Where(P => P.IsDeleted == false).CountAsync();
+            var totalPetsForAdpotion = await unitOfWork.PetRepository.GetAllQueryable().Where(P => P.Status == PetStatus.ForAdoption).CountAsync();
+            var totalPetsForRescue = await unitOfWork.PetRepository.GetAllQueryable().Where(P => P.Status == PetStatus.ForRescue).CountAsync();
+            //Users Stats
+            var totalUsers = await unitOfWork.ApplicationUserRepository.GetAllQueryable().Where(U => U.IsDeleted == false).CountAsync();
+            var totalDoctors = await unitOfWork.DoctorRepository.GetAllQueryable().Where(U => U.IsDeleted == false).CountAsync();
+            var totalCustomers = await unitOfWork.CustomerRepository.GetAllQueryable().Where(U => U.IsDeleted == false).CountAsync();
+
+            AdminStatisticsDTO stats = new AdminStatisticsDTO()
+            {
+                TotalPets = totalPets,
+                PetsForAdoption = totalPetsForAdpotion,
+                PetsForRescue = totalPetsForRescue,
+                TotalUsers = totalUsers,
+                TotalCustomers = totalCustomers,
+                TotalDoctors = totalDoctors
+            };
+            return stats;
         }
     }
 }

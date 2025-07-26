@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PetConnect.BLL.Services.DTO.Doctor;
 using PetConnect.BLL.Services.DTO.PetDto;
@@ -11,6 +12,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace PetConnect.API.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles ="Admin")]
     [ApiController]
     public class AdminController : ControllerBase
     {
@@ -98,6 +100,15 @@ namespace PetConnect.API.Controllers
             }
         }
 
+
+        [HttpGet("statistics")]
+        [EndpointSummary("Get overall statistics for pets, users, doctors, and customers")]
+        [ProducesResponseType(typeof(AdminStatisticsDTO), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetStatistics()
+        {
+            var stats = await adminService.GetAdminStatistics();
+            return Ok(new GeneralResponse(200, stats));
+        }
 
     }
 }

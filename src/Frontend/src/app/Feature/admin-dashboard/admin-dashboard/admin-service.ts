@@ -61,4 +61,12 @@ export class AdminService {
       { headers: this.headers }
     );
   }
+  getStatistics(): Observable<AdminStatistics> {
+    return this.http.get<{ data: AdminStatistics }>(
+      `${environment.apiBaseUrl}/Admin/statistics`
+    ).pipe(
+      map(response => response.data)
+    );
+  }
+
 }
